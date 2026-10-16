@@ -8,7 +8,9 @@ O Davizeira pedala pela quebrada, pula obstáculos, pega moedas e impina a bike.
 | Ação | Celular | Teclado |
 |---|---|---|
 | Pular | botão **PULAR** ou tocar na tela | Espaço / ↑ / W |
-| Impinar | segurar **IMPINAR** | Shift / → / D |
+| Acelerar | segurar **ACELERAR** | → / K |
+| Impinar | segurar **IMPINAR** | Shift / D |
+| Especial | botão **★ ESPECIAL** | E / ↓ |
 | Pausar | ⏸ | P / Esc |
 
 - Segure o pulo para saltar mais alto (passa por obstáculos duplos).
@@ -18,6 +20,7 @@ O Davizeira pedala pela quebrada, pula obstáculos, pega moedas e impina a bike.
 - Ao bater a meta de pontos aparece o botão **★ ESPECIAL** (ou tecla E / ↓): a manobra massa
   dá um mortal com fogo, quebra os obstáculos no caminho e vale +300. A barra do botão
   vai acabando — use antes que ele suma!
+- Pule na cabeça das **baratas**, **ratões** e **pombos** — pisões seguidos sem tocar o chão viram combo.
 - São 3 vidas; corações aparecem de vez em quando para recuperar.
 
 ## Estrutura

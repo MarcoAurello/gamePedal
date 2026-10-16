@@ -43,26 +43,44 @@
       <span>★ ESPECIAL</span>
       <i class="vida-especial"><b id="barra-especial"></b></i>
     </button>
-    <button class="ctrl ctrl-pular" id="btn-pular">PULAR</button>
+    <div class="ctrl-dir">
+      <button class="ctrl ctrl-acelerar" id="btn-acelerar">ACELERAR</button>
+      <button class="ctrl ctrl-pular" id="btn-pular">PULAR</button>
+    </div>
   </div>
 
   <!-- Tela inicial -->
   <section class="painel ativo" id="tela-inicio">
+    <div class="inicio-layout">
+    <div class="heroi">
+      <img class="davi-grande" id="davi-grande" src="assets/sprites/pedal_0.png" alt="Davizeira na bike">
+      <div class="chao-heroi"></div>
+    </div>
     <div class="caixa">
-      <img class="cabeca" src="assets/sprites/icone_2.png" alt="Davi">
       <h1 class="titulo">
         <span class="t1">DAVIZEIRA</span>
         <span class="t2">NO PEDAL</span>
       </h1>
       <button class="btn-jogar" id="btn-jogar">▶ JOGAR</button>
+      <button class="btn-sec btn-instalar" id="btn-instalar" hidden>📲 INSTALAR APP</button>
       <p class="recorde">RECORDE: <span id="recorde-inicio">0</span></p>
       <div class="dicas">
-        <p><b>PULAR:</b> toque no botão, ESPAÇO ou ↑</p>
-        <p><b>IMPINAR:</b> segure o botão, SHIFT ou →</p>
-        <p>Pule os obstáculos, pegue moedas e impine para ganhar pontos em dobro!</p>
+        <p><b>PULAR:</b> botão ou ESPAÇO/↑ · <b>ACELERAR:</b> segure ou →</p>
+        <p><b>IMPINAR:</b> segure ou SHIFT/D · <b>ESPECIAL:</b> E</p>
+        <p>Pule na cabeça das baratas, ratões e pombos!</p>
       </div>
       <p class="girar">📱↻ Gire o celular para jogar melhor</p>
       <a class="link-privacidade" href="privacidade.html">Política de privacidade</a>
+    </div>
+    </div>
+  </section>
+
+  <!-- Ajuda para instalar quando o navegador não abre a instalação sozinho -->
+  <section class="painel" id="tela-instalar">
+    <div class="caixa">
+      <h2 class="subtitulo">INSTALAR</h2>
+      <div class="dicas passo-a-passo" id="passos-instalar"></div>
+      <button class="btn-jogar" id="btn-fechar-instalar">OK</button>
     </div>
   </section>
 

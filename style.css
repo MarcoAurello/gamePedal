@@ -354,3 +354,79 @@ body.jogando .credito { display: none; }
 @keyframes especial {
   50% { box-shadow: 0 5px 0 var(--sombra), 0 0 26px 6px rgba(255, 210, 63, 0.85); }
 }
+
+/* ---------- Botões da direita: acelerar + pular ---------- */
+.ctrl-dir {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.ctrl-acelerar { background: rgba(46, 158, 58, 0.55); }
+
+/* ---------- Instalar app ---------- */
+.btn-instalar {
+  border-color: var(--amarelo);
+  color: var(--amarelo);
+}
+
+.passo-a-passo {
+  max-width: 460px;
+  font-size: 11px;
+  line-height: 2.1;
+  text-align: left;
+}
+
+#tela-instalar { z-index: 10; }
+
+/* ---------- Tela inicial: Davi grande parado na bike ---------- */
+.inicio-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(16px, 5vw, 72px);
+  width: 100%;
+  max-height: 100%;
+}
+
+.heroi {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.davi-grande {
+  height: min(64vh, 440px);
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(6px 6px 0 rgba(26, 15, 38, 0.45));
+  animation: respirar 2.4s ease-in-out infinite;
+  transform-origin: 50% 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.chao-heroi {
+  width: 92%;
+  height: 18px;
+  margin-top: -10px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(26, 15, 38, 0.55), transparent 70%);
+}
+
+@keyframes respirar {
+  50% { transform: scaleY(1.015) translateY(-2px); }
+}
+
+/* celular em pé: Davi em cima, menu embaixo */
+@media (orientation: portrait) {
+  .inicio-layout { flex-direction: column; gap: 10px; }
+  .davi-grande { height: min(30vh, 260px); }
+}
+
+/* celular deitado: Davi menor para caber o menu */
+@media (max-height: 460px) {
+  .davi-grande { height: 72vh; }
+}

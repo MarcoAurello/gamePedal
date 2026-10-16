@@ -517,7 +517,9 @@ let jogo;
 let recorde = 0;
 try { recorde = Number(localStorage.getItem('davizeira-recorde')) || 0; } catch (e) {}
 
-const entrada = { pular: false, impinar: false, pulouAgora: false };
+const entrada = { pular: false, impinar: false, acelerar: false, pulouAgora: false };
+
+const TURBO = { extra: 0.6, resposta: 2.5 };   // acelerar: até +60% de velocidade
 
 function novoJogo() {
   jogo = {
@@ -560,22 +562,31 @@ function criarObjetos() {
   const r = Math.random();
   const dificuldade = Math.min(1, jogo.tempo / 90);
 
-  if (r < 0.38) {
+  if (r < 0.26) {
     obstaculo(x, 0.5);
     if (Math.random() < 0.6) arcoDeMoedas(x - 10, 4, 150);
-  } else if (r < 0.58 + dificuldade * 0.1) {
+  } else if (r < 0.38 + dificuldade * 0.06) {
     obstaculo(x, 0.72);
     if (Math.random() < 0.5) arcoDeMoedas(x, 5, 200);
-  } else if (r < 0.74) {
+  } else if (r < 0.48) {
     jogo.objetos.push({ tipo: 'rampa', x, w: 170, h: 42 });
     arcoDeMoedas(x + 260, 6, 300);
-  } else if (r < 0.92) {
+  } else if (r < 0.58) {
     linhaDeMoedas(x, 6, 30 + Math.random() * 60);
-  } else {
+  } else if (r < 0.65) {
     // Dupla bem próxima: um pulo segurado passa pelos dois
     obstaculo(x, 0.5);
     obstaculo(x + IMG.icone_5.width * 0.5 + 70 + Math.random() * 30, 0.5);
     texto('SEGURA O PULO!', '#ff8a1f');
+  } else if (r < 0.79) {
+    // fileira de baratas: dá para pisar em várias seguidas (combo)
+    const n = 1 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < n; i++) inimigo('barata', x + i * 90);
+  } else if (r < 0.9) {
+    inimigo('rato', x);
+  } else {
+    inimigo('pombo', x);
+    if (Math.random() < 0.5) inimigo('pombo', x + 160);
   }
 
   if (jogo.vidas < 3 && Math.random() < 0.06) {
@@ -585,6 +596,173 @@ function criarObjetos() {
   // espaço até o próximo grupo cresce com a velocidade
   const tempoLivre = 1.05 + Math.random() * 0.9 - dificuldade * 0.3;
   jogo.proximo = jogo.velocidade * tempoLivre + 260;
+}
+
+// ---------------------------------------------------------------------
+//  Inimigos em pixel art (desenhados por código, animados em 2 quadros)
+// ---------------------------------------------------------------------
+const ARTE = {
+  barata: {
+    paleta: { k: '#2a1608', b: '#7a3b12', l: '#b0652c', w: '#ffffff', p: '#111111' },
+    corpo: [
+      '..k.........k...',
+      '...k.......k....',
+      '....kkkkkkkk....',
+      '..kkllbbbbbbkk..',
+      '.kwpbllbbbbbbbk.',
+      'kkbbbbllbbbbbbbk',
+      'kbbbbbbbbbbbbbbk',
+      '.kkkkkkkkkkkkkk.',
+    ],
+    pernas: [
+      ['..k...k...k...k.', '.k...k...k...k..'],
+      ['...k...k...k...k', '..k...k...k...k.'],
+    ],
+  },
+  rato: {
+    paleta: { d: '#34343c', g: '#7b7b86', c: '#a3a3ad', e: '#f2a0b0', n: '#ff7f9a', w: '#ffffff', p: '#d81b3c', t: '#e88aa0' },
+    corpo: [
+      '..dd..............',
+      '.deed.............',
+      '.deedd............',
+      '.ddddggggggggd....',
+      'dwpggccccggggggd..',
+      'nggggggggggggggd..',
+      'dggggggggggggggdtt',
+      '.dgggggggggggggd..',
+      '..ddddddddddddd...',
+    ],
+    pernas: [
+      ['..d.d......d.d....', '..................'],
+      ['...d.d......d.d...', '..................'],
+    ],
+  },
+  pombo: {
+    paleta: { d: '#3e4656', h: '#8b97ab', v: '#5aa08c', w: '#cdd6e2', p: '#111111', o: '#f08a24' },
+    quadros: [
+      [
+        '.....dddd.......',
+        '....dwwwwd......',
+        '...dwwwwd.......',
+        '.dddwwdd........',
+        'dvpddhhhhhdd....',
+        'ovvhhhhhhhhhddd.',
+        '.dhhhhhhhhhhhhd.',
+        '..dddhhhhhhddd..',
+        '.....dd.dd......',
+        '.....o..o.......',
+      ],
+      [
+        '................',
+        '................',
+        '................',
+        '.dd.............',
+        'dvpddhhhhhdd....',
+        'ovvhhhhhhhhhddd.',
+        '.dhhhwwwwhhhhhd.',
+        '..dddwwwwwwddd..',
+        '.....dwwwwd.....',
+        '......dwwd......',
+      ],
+    ],
+  },
+};
+
+const INIMIGO = {
+  barata: { escala: 4, vel: 60, pontos: 100 },
+  rato:   { escala: 4,   vel: 150, pontos: 150 },
+  pombo:  { escala: 3.6, vel: 90, pontos: 200, voa: true },
+};
+
+const QUADROS_INIMIGO = {};
+
+function pixelArt(linhas, paleta, escala) {
+  const c = document.createElement('canvas');
+  c.width = linhas[0].length * escala;
+  c.height = linhas.length * escala;
+  const g = c.getContext('2d');
+  linhas.forEach((linha, y) => {
+    [...linha].forEach((ch, x) => {
+      if (!paleta[ch]) return;
+      g.fillStyle = paleta[ch];
+      g.fillRect(x * escala, y * escala, escala, escala);
+    });
+  });
+  return c;
+}
+
+function montarInimigos() {
+  for (const [nome, arte] of Object.entries(ARTE)) {
+    const quadros = arte.quadros || arte.pernas.map((p) => [...arte.corpo, ...p]);
+    QUADROS_INIMIGO[nome] = quadros.map((q) => pixelArt(q, arte.paleta, INIMIGO[nome].escala));
+  }
+}
+
+function inimigo(especie, x) {
+  const img = QUADROS_INIMIGO[especie][0];
+  const dados = INIMIGO[especie];
+  const base = dados.voa ? 95 + Math.random() * 40 : 0;
+  jogo.objetos.push({ tipo: 'inimigo', especie, x, y: base, base, w: img.width, h: img.height, anim: Math.random(), morto: 0 });
+}
+
+// Os inimigos andam na direção do Davi (além da rua passando)
+function atualizarInimigos(dt) {
+  for (const o of jogo.objetos) {
+    if (o.tipo !== 'inimigo') continue;
+    if (o.morto > 0) {
+      o.morto -= dt;
+      if (o.morto <= 0) o.pego = true;
+      continue;
+    }
+    o.anim += dt;
+    o.x -= INIMIGO[o.especie].vel * dt;
+    if (o.especie === 'rato') o.y = Math.abs(Math.sin(o.anim * 5)) * 26;          // vem pulando
+    if (o.especie === 'pombo') o.y = o.base + Math.sin(o.anim * 3) * 18;          // voa ondulando
+  }
+}
+
+// Pisou na cabeça: o inimigo achata e o Davi quica (pisões seguidos = combo)
+function esmagar(o, quica) {
+  const j = jogo.jogador;
+  o.morto = 0.45;
+  j.combo = (j.combo || 0) + 1;
+  const valor = INIMIGO[o.especie].pontos * j.combo;
+  pontuar(valor, j.combo > 1 ? `COMBO ×${j.combo}! +${valor}` : `PISOU! +${valor}`);
+  som('moeda');
+  if (quica) {
+    j.vy = 760;
+    j.noChao = false;
+    j.manobra = false;
+  }
+  for (let i = 0; i < 6; i++) {
+    jogo.particulas.push({
+      tipo: 'caco', x: o.x + o.w / 2, y: o.y + o.h / 2,
+      vx: -250 + Math.random() * 500, vy: 200 + Math.random() * 300,
+      vida: 0.5, max: 0.5, cor: '#ffffff',
+    });
+  }
+}
+
+function desenharInimigo(o) {
+  const quadros = QUADROS_INIMIGO[o.especie];
+  const ritmo = o.especie === 'pombo' ? 7 : 10;
+  const img = quadros[Math.floor(o.anim * ritmo) % quadros.length];
+  const x = Math.round(o.x);
+  if (o.morto > 0) {
+    // achatado
+    const h = Math.round(o.h * 0.35);
+    ctx.globalAlpha = Math.min(1, o.morto * 3);
+    ctx.drawImage(img, x - 4, Math.round(CHAO - o.y - h + 2), o.w + 8, h);
+    ctx.globalAlpha = 1;
+    return;
+  }
+  if (INIMIGO[o.especie].voa) {
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.beginPath();
+    ctx.ellipse(x + o.w / 2, CHAO + 2, o.w * 0.35, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.drawImage(img, x, Math.round(CHAO - o.y - o.h + 2));
 }
 
 function obstaculo(x, tamanho) {
@@ -632,9 +810,13 @@ function atualizar(dt) {
   }
 
   jogo.velocidade = Math.min(FISICA.velMaxima, jogo.velocidade + FISICA.aceleracao * dt);
-  const passo = jogo.velocidade * dt;
+  // Acelerar: segurando, a bike ganha velocidade aos poucos; soltando, volta ao normal
+  const alvoTurbo = entrada.acelerar ? 1 : 0;
+  jogo.turbo = (jogo.turbo || 0) + Math.sign(alvoTurbo - (jogo.turbo || 0)) * Math.min(Math.abs(alvoTurbo - (jogo.turbo || 0)), TURBO.resposta * dt);
+  const velocidade = jogo.velocidade * (1 + TURBO.extra * jogo.turbo);
+  const passo = velocidade * dt;
   jogo.distancia += passo;
-  j.anim += dt * (jogo.velocidade / 330);
+  j.anim += dt * (velocidade / 330);
   j.invencivel = Math.max(0, j.invencivel - dt);
   j.pouso = Math.max(0, j.pouso - dt);
 
@@ -650,6 +832,7 @@ function atualizar(dt) {
 
   atualizarEspecial(dt);
 
+  j.yAnterior = j.y;
   if (!j.noChao) {
     const g = entrada.pular && j.vy > 0 && !j.manobraMassa ? FISICA.gravidadeSegurando : FISICA.gravidade;
     j.vy -= g * dt;
@@ -664,6 +847,7 @@ function atualizar(dt) {
       j.vy = 0;
       j.noChao = true;
       j.pouso = 0.14;
+      j.combo = 0;   // pisões seguidos só valem enquanto não toca o chão
       if (j.manobra) { pontuar(50, 'MANOBRA! +50'); j.manobra = false; }
       if (j.manobraMassa) {
         j.manobraMassa = false;
@@ -706,6 +890,7 @@ function atualizar(dt) {
   if (jogo.proximo <= 0) criarObjetos();
 
   moverObjetos(passo);
+  atualizarInimigos(dt);
   colisoes();
 
   // Textos flutuantes e partículas
@@ -794,6 +979,15 @@ function colisoes() {
         if (j.manobraMassa) quebrar(o);
         else if (j.invencivel <= 0) bater(o);
       }
+    } else if (o.tipo === 'inimigo') {
+      if (o.morto > 0) continue;
+      const ci = { x: o.x + 4, y: o.y, w: o.w - 8, h: o.h - 4 };
+      if (!encosta(cj, ci)) continue;
+      // caindo e, no quadro anterior, com a roda acima do meio dele = pisou na cabeça
+      const pisou = j.vy < 0 && (j.yAnterior ?? j.y) + 4 >= o.y + o.h * 0.5;
+      if (j.manobraMassa) esmagar(o, false);
+      else if (pisou) esmagar(o, true);
+      else if (j.invencivel <= 0) bater(o);
     } else if (o.tipo === 'rampa') {
       // passou pela rampa no chão: decola alto
       if (j.noChao && cj.x + cj.w > o.x + 20 && cj.x < o.x + o.w - 30 && !o.usada) {
@@ -901,12 +1095,24 @@ function desenhar() {
 
   desenharCenario(jogo.distancia);
 
+  // linhas de velocidade ao acelerar
+  if ((jogo.turbo || 0) > 0.2) {
+    ctx.fillStyle = `rgba(255,255,255,${0.35 * jogo.turbo})`;
+    for (let i = 0; i < 9; i++) {
+      const ly = 120 + ((i * 97) % 320);
+      const lx = LARGURA - ((jogo.distancia * 1.6 + i * 233) % (LARGURA + 200));
+      ctx.fillRect(Math.round(lx), ly, 90 + (i % 3) * 40, 3);
+    }
+  }
+
   // objetos
   for (const o of jogo.objetos) {
     if (o.tipo === 'obstaculo') {
       ctx.drawImage(IMG.icone_5, Math.round(o.x), Math.round(CHAO - o.h + 4), Math.round(o.w), Math.round(o.h));
     } else if (o.tipo === 'rampa') {
       desenharRampa(o);
+    } else if (o.tipo === 'inimigo') {
+      desenharInimigo(o);
     } else if (o.tipo === 'moeda') {
       const giro = Math.abs(Math.cos(jogo.distancia / 40 + o.x / 60));
       const mw = Math.max(4, o.w * giro);
@@ -917,8 +1123,9 @@ function desenhar() {
     }
   }
 
-  // Davi
+  // Davi (no menu ele aparece grande, parado, na tela inicial)
   const j = jogo.jogador;
+  if (modo === 'menu') return;
   // sombra
   ctx.fillStyle = 'rgba(0,0,0,0.3)';
   const sombra = Math.max(0.4, 1 - j.y / 300);
@@ -1031,7 +1238,9 @@ let ultimoHud = '';
 
 function atualizarHud() {
   const j = jogo.jogador;
-  const combo = j.manobraMassa ? '★ MANOBRA MASSA! ★' : j.empinar >= EQUILIBRIO.naRoda ? 'IMPINANDO! ×2' : '';
+  const combo = j.manobraMassa ? '★ MANOBRA MASSA! ★'
+    : j.empinar >= EQUILIBRIO.naRoda ? 'IMPINANDO! ×2'
+    : (jogo.turbo || 0) > 0.5 ? 'ACELERANDO!' : '';
 
   // Botão do especial e a vida dele (muda todo quadro)
   const esp = jogo.especial;
@@ -1143,14 +1352,16 @@ window.addEventListener('keydown', (e) => {
     if (modo === 'menu' || modo === 'fim') return iniciar();
     apertarPulo();
   }
-  if (['ShiftLeft', 'ShiftRight', 'ArrowRight', 'KeyD'].includes(e.code)) entrada.impinar = true;
+  if (['ShiftLeft', 'ShiftRight', 'KeyD'].includes(e.code)) entrada.impinar = true;
+  if (['ArrowRight', 'KeyK'].includes(e.code)) entrada.acelerar = true;
   if (e.code === 'KeyP' || e.code === 'Escape') modo === 'pausado' ? continuar() : pausar();
   if (e.code === 'KeyE' || e.code === 'ArrowDown') usarEspecial();
 });
 
 window.addEventListener('keyup', (e) => {
   if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) entrada.pular = false;
-  if (['ShiftLeft', 'ShiftRight', 'ArrowRight', 'KeyD'].includes(e.code)) entrada.impinar = false;
+  if (['ShiftLeft', 'ShiftRight', 'KeyD'].includes(e.code)) entrada.impinar = false;
+  if (['ArrowRight', 'KeyK'].includes(e.code)) entrada.acelerar = false;
 });
 
 function botaoSegurar(el, aoApertar, aoSoltar) {
@@ -1166,6 +1377,7 @@ function botaoSegurar(el, aoApertar, aoSoltar) {
 }
 
 botaoSegurar($('btn-pular'), apertarPulo, () => { entrada.pular = false; });
+botaoSegurar($('btn-acelerar'), () => { entrada.acelerar = true; }, () => { entrada.acelerar = false; });
 botaoSegurar($('btn-impinar'), () => { entrada.impinar = true; }, () => { entrada.impinar = false; });
 botaoSegurar($('btn-especial'), usarEspecial, () => {});
 
@@ -1176,6 +1388,46 @@ canvas.addEventListener('pointerdown', (e) => {
   apertarPulo();
 });
 canvas.addEventListener('pointerup', () => { entrada.pular = false; });
+
+// ---------------------------------------------------------------------
+//  Instalar como app
+// ---------------------------------------------------------------------
+let pedidoInstalacao = null;
+const rodandoComoApp = () => matchMedia('(display-mode: fullscreen)').matches
+  || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+// Chrome/Edge no Android avisam quando dá para instalar: guardamos o pedido para o botão
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  pedidoInstalacao = e;
+  $('btn-instalar').hidden = false;
+});
+window.addEventListener('appinstalled', () => {
+  pedidoInstalacao = null;
+  $('btn-instalar').hidden = true;
+});
+if (!rodandoComoApp()) $('btn-instalar').hidden = false;
+
+$('btn-instalar').addEventListener('click', async () => {
+  if (pedidoInstalacao) {
+    pedidoInstalacao.prompt();
+    const { outcome } = await pedidoInstalacao.userChoice;
+    pedidoInstalacao = null;
+    if (outcome === 'accepted') $('btn-instalar').hidden = true;
+    return;
+  }
+  // Sem o pedido do navegador: explica como instalar à mão
+  const ua = navigator.userAgent;
+  const ios = /iphone|ipad|ipod/i.test(ua);
+  const dentroDeApp = /FBAN|FBAV|Instagram|WhatsApp|Line\//i.test(ua);
+  const passos = ios
+    ? ['Abra este link no <b>Safari</b>.', 'Toque em <b>Compartilhar</b> (quadrado com seta ⬆).', 'Escolha <b>Adicionar à Tela de Início</b>.', 'Abra pelo <b>ícone do Davi</b>.']
+    : ['Abra este link no <b>Google Chrome</b> (não dentro do WhatsApp ou Instagram).', 'Toque em <b>⋮</b> no canto de cima.', 'Toque em <b>Instalar app</b> (ou <b>Adicionar à tela inicial → Instalar</b>).', 'Abra pelo <b>ícone do Davi</b> na tela do celular.'];
+  if (dentroDeApp) passos.unshift('⚠ Você abriu pelo navegador de outro app, que não instala jogos. Toque em <b>⋮ → Abrir no navegador</b>.');
+  $('passos-instalar').innerHTML = passos.map((p, i) => `<p>${i + 1}. ${p}</p>`).join('');
+  $('tela-instalar').classList.add('ativo');
+});
+$('btn-fechar-instalar').addEventListener('click', () => $('tela-instalar').classList.remove('ativo'));
 
 $('btn-jogar').addEventListener('click', iniciar);
 $('btn-denovo').addEventListener('click', iniciar);
@@ -1206,6 +1458,7 @@ function laco(agora) {
 
 ajustarTela();
 montarCenario();
+montarInimigos();
 novoJogo();
 $('recorde-inicio').textContent = recorde;
 carregarImagens().then(() => requestAnimationFrame(laco));
