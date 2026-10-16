@@ -31,8 +31,10 @@ O Davizeira pedala pela quebrada, pula obstáculos, pega moedas e impina a bike.
 - `ferramentas/recortar.ps1` — recorta a folha de sprites (rode de novo se trocar a imagem)
 - `ferramentas/icones.ps1` — gera os ícones do app
 - `ferramentas/recortar-capa.ps1` — tira o fundo liso da ilustração do Davi (gera `assets/davi.png`)
-- `assets/impinando-original.png` → `assets/davi-impinando.png` — ilustração da tela inicial (Davi impinando; os pneus giram por cima)
-- `ferramentas/preparar-impinando.ps1` — corta, reduz e mede as rodas da ilustração
+- `assets/impinando-original.png` → `assets/davi-impinando.png` — ilustração da tela inicial (Davi impinando)
+- `assets/davi-impinando.jpg` + `davi-impinando-mascara.png` — versão leve que o jogo usa (cor + transparência)
+- `ferramentas/compactar-ilustracao.ps1` — gera a versão leve a partir do PNG
+- `ferramentas/preparar-impinando.ps1` — corta e reduz a ilustração
 - `manifest.json`, `service-worker.js`, `icons/` — app instalável (PWA), funciona offline
 - `privacidade.html` — política de privacidade (exigida pela Google Play)
 

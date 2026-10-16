@@ -432,7 +432,7 @@ body.jogando .credito { display: none; }
   .capa { height: 80vh; }
 }
 
-/* ---------- Tela inicial: Davi impinando, com pneus girando ---------- */
+/* ---------- Tela inicial: Davi impinando ---------- */
 .impinando {
   position: relative;
   height: min(72vh, 500px);
@@ -443,24 +443,15 @@ body.jogando .credito { display: none; }
   animation: grau 1.8s ease-in-out infinite;
 }
 
+/* cor em JPEG (leve) + transparência numa máscara PNG: mesma qualidade, bem menor */
 .impinando-base {
   display: block;
   width: 100%;
   height: 100%;
-}
-
-/* anel do pneu, com a mesma imagem por baixo, girando no lugar */
-.pneu {
-  position: absolute;
-  border-radius: 50%;
-  background-repeat: no-repeat;
-  -webkit-mask-image: radial-gradient(closest-side, transparent 70%, #000 73%, #000 97%, transparent 100%);
-  mask-image: radial-gradient(closest-side, transparent 70%, #000 73%, #000 97%, transparent 100%);
-  animation: rodar 0.12s linear infinite;
-}
-
-@keyframes rodar {
-  to { transform: rotate(9deg); }       /* um "dente" do pneu: parece giro contínuo */
+  -webkit-mask-image: url(assets/davi-impinando-mascara.png);
+  mask-image: url(assets/davi-impinando-mascara.png);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
 }
 
 @keyframes grau {
@@ -477,5 +468,5 @@ body.jogando .credito { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .impinando, .pneu { animation: none; }
+  .impinando { animation: none; }
 }

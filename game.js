@@ -1473,37 +1473,7 @@ function laco(agora) {
   requestAnimationFrame(laco);
 }
 
-// ---------------------------------------------------------------------
-//  Tela inicial: posiciona os anéis que giram em cima dos pneus da ilustração
-//  (medidas em pixels da imagem davi-impinando.png, 900×827)
-// ---------------------------------------------------------------------
-const ILUSTRACAO = {
-  w: 900, h: 827, img: 'assets/davi-impinando.png',
-  rodas: {
-    traseira: { cx: 160, cy: 666, r: 160 },
-    dianteira: { cx: 714, cy: 382, r: 184 },
-  },
-};
-
-function montarPneus() {
-  const { w, h, img, rodas } = ILUSTRACAO;
-  document.querySelectorAll('.pneu').forEach((el) => {
-    const { cx, cy, r } = rodas[el.dataset.roda];
-    const d = 2 * r;
-    Object.assign(el.style, {
-      left: `${((cx - r) / w) * 100}%`,
-      top: `${((cy - r) / h) * 100}%`,
-      width: `${(d / w) * 100}%`,
-      height: `${(d / h) * 100}%`,
-      backgroundImage: `url(${img})`,
-      backgroundSize: `${(w / d) * 100}% ${(h / d) * 100}%`,
-      backgroundPosition: `${((cx - r) / (w - d)) * 100}% ${((cy - r) / (h - d)) * 100}%`,
-    });
-  });
-}
-
 ajustarTela();
-montarPneus();
 montarCenario();
 montarInimigos();
 novoJogo();
