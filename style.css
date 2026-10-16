@@ -379,7 +379,7 @@ body.jogando .credito { display: none; }
 
 #tela-instalar { z-index: 10; }
 
-/* ---------- Tela inicial: Davi grande parado na bike ---------- */
+/* ---------- Tela inicial: ilustração do Davi na bike ---------- */
 .inicio-layout {
   display: flex;
   align-items: center;
@@ -397,36 +397,37 @@ body.jogando .credito { display: none; }
   flex-shrink: 0;
 }
 
-.davi-grande {
-  height: min(64vh, 440px);
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-  filter: drop-shadow(6px 6px 0 rgba(26, 15, 38, 0.45));
-  animation: respirar 2.4s ease-in-out infinite;
-  transform-origin: 50% 100%;
-  position: relative;
-  z-index: 1;
+/* ilustração com fundo (cartão com moldura) */
+.capa {
+  height: min(80vh, 560px);
+  max-width: 48vw;
+  object-fit: cover;
+  border: 4px solid var(--texto);
+  border-radius: 18px;
+  box-shadow: 0 8px 0 var(--sombra), 0 18px 40px rgba(0, 0, 0, 0.35);
+  animation: flutuar 3s ease-in-out infinite;
 }
 
-.chao-heroi {
-  width: 92%;
-  height: 18px;
-  margin-top: -10px;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(26, 15, 38, 0.55), transparent 70%);
+/* ilustração recortada (fundo transparente): solta em cima do cenário */
+.capa.recortada {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
 }
 
-@keyframes respirar {
-  50% { transform: scaleY(1.015) translateY(-2px); }
+@keyframes flutuar {
+  50% { transform: translateY(-6px); }
 }
 
 /* celular em pé: Davi em cima, menu embaixo */
 @media (orientation: portrait) {
   .inicio-layout { flex-direction: column; gap: 10px; }
-  .davi-grande { height: min(30vh, 260px); }
+  .capa { height: min(34vh, 300px); max-width: 90vw; }
 }
 
-/* celular deitado: Davi menor para caber o menu */
+/* celular deitado: imagem um pouco menor para caber o menu */
 @media (max-height: 460px) {
-  .davi-grande { height: 72vh; }
+  .capa { height: 80vh; }
 }
