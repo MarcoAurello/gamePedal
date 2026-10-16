@@ -73,15 +73,31 @@ const ctx = canvas.getContext('2d');
 let LARGURA = 960;
 let escala = 1, deslocY = 0, dpr = 1;
 
+// Zoom da câmera: em telas baixas (celular deitado) mostra menos céu e tudo fica maior
+let VISTA = ALTURA;          // altura do mundo que aparece na tela
+let cameraTopo = 0;          // y do mundo no topo da tela (sobe quando o Davi pula alto)
+
 function ajustarTela() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
   const w = window.innerWidth, h = window.innerHeight;
-  LARGURA = Math.max(640, Math.min(1280, Math.round(ALTURA * (w / h))));
-  escala = Math.min(w / LARGURA, h / ALTURA);
-  deslocY = (h - ALTURA * escala) / 2;   // celular em pé: faixa no meio
+  const zoom = h <= 440 ? 1.5 : h <= 620 ? 1.25 : 1;
+  VISTA = Math.round(ALTURA / zoom);
+  LARGURA = Math.max(560, Math.min(1280, Math.round(VISTA * (w / h))));
+  escala = Math.min(w / LARGURA, h / VISTA);
+  deslocY = (h - VISTA * escala) / 2;   // celular em pé: faixa no meio
+  cameraTopo = ALTURA - VISTA;
   canvas.width = Math.round(w * dpr);
   canvas.height = Math.round(h * dpr);
   ctx.imageSmoothingEnabled = false;
+}
+
+// A câmera fica embaixo (rua sempre visível) e sobe suave quando o Davi vai alto
+function atualizarCamera(dt) {
+  const base = ALTURA - VISTA;
+  const j = jogo.jogador;
+  const precisa = CHAO - j.y - 230;            // espaço para o Davi + barra em cima dele
+  const alvo = Math.min(base, precisa);
+  cameraTopo += (alvo - cameraTopo) * Math.min(1, dt * 7);
 }
 window.addEventListener('resize', ajustarTela);
 
@@ -1088,9 +1104,9 @@ function desenhar() {
   ctx.fillStyle = '#3f9be6';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = '#8a867f';
-  ctx.fillRect(0, (deslocY + ALTURA * escala) * dpr - 2, canvas.width, canvas.height);
+  ctx.fillRect(0, (deslocY + (ALTURA - cameraTopo) * escala) * dpr - 2, canvas.width, canvas.height);
 
-  ctx.setTransform(escala * dpr, 0, 0, escala * dpr, ((w - LARGURA * escala) / 2) * dpr, deslocY * dpr);
+  ctx.setTransform(escala * dpr, 0, 0, escala * dpr, ((w - LARGURA * escala) / 2) * dpr, (deslocY - cameraTopo * escala) * dpr);
   ctx.imageSmoothingEnabled = false;
 
   desenharCenario(jogo.distancia);
@@ -1451,6 +1467,7 @@ function laco(agora) {
   const dt = Math.min(0.05, (agora - anterior) / 1000);
   anterior = agora;
   atualizar(dt);
+  atualizarCamera(dt);
   desenhar();
   if (modo !== 'menu') atualizarHud();
   requestAnimationFrame(laco);
