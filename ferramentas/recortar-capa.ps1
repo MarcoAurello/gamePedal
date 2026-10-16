@@ -59,6 +59,18 @@ public static class RecorteCapa {
       if (borda || regiao.Count > 120) foreach (int q in regiao) transparente[q] = true;
     }
 
+    // Sombra cinza-clara embaixo dos pneus: some (o jogo põe a sua própria sombra)
+    int basePneu = 0;
+    for (int y = 0; y < H; y++) for (int x = 0; x < W; x++) {
+      int i = (y * W + x) * 4;
+      if (!transparente[y * W + x] && (px[i] + px[i+1] + px[i+2]) / 3 < 90) basePneu = y;
+    }
+    for (int y = Math.Max(0, basePneu - 30); y < H; y++) for (int x = 0; x < W; x++) {
+      int p = y * W + x, i = p * 4;
+      int mx = Math.Max(px[i], Math.Max(px[i+1], px[i+2])), mn = Math.Min(px[i], Math.Min(px[i+1], px[i+2]));
+      if (mx - mn < 22 && (px[i] + px[i+1] + px[i+2]) / 3 > 125) transparente[p] = true;
+    }
+
     // Aplica a transparência com borda suave (anti-serrilhado)
     int minX = W, minY = H, maxX = 0, maxY = 0;
     for (int y = 0; y < H; y++) for (int x = 0; x < W; x++) {

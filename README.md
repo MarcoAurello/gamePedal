@@ -31,7 +31,7 @@ O Davizeira pedala pela quebrada, pula obstáculos, pega moedas e impina a bike.
 - `ferramentas/recortar.ps1` — recorta a folha de sprites (rode de novo se trocar a imagem)
 - `ferramentas/icones.ps1` — gera os ícones do app
 - `ferramentas/recortar-capa.ps1` — tira o fundo liso da ilustração do Davi (gera `assets/davi.png`)
-- `assets/capa.jpg` — ilustração da tela inicial
+- `assets/davi-original.jpg` → `assets/davi.png` — ilustração da tela inicial (original e recortada)
 - `manifest.json`, `service-worker.js`, `icons/` — app instalável (PWA), funciona offline
 - `privacidade.html` — política de privacidade (exigida pela Google Play)
 
