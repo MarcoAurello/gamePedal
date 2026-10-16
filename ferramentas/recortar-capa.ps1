@@ -1,9 +1,9 @@
 # Tira o fundo claro e liso da ilustração do Davi e salva PNG transparente.
 # Uso: powershell -ExecutionPolicy Bypass -File ferramentas\recortar-capa.ps1 caminho\da\imagem.jpg
-param([Parameter(Mandatory = $true)][string]$Entrada)
+param([Parameter(Mandatory = $true)][string]$Entrada, [string]$Nome = "davi.png", [int]$Largura = 720)
 
 $raiz = Split-Path $PSScriptRoot -Parent
-$saida = Join-Path $raiz 'assets\davi.png'
+$saida = Join-Path (Join-Path $raiz 'assets') $Nome
 
 Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @'
 using System;
@@ -98,12 +98,12 @@ public static class RecorteCapa {
       g.DrawImage(bmp, new Rectangle(0, 0, fw, fh), new Rectangle(minX, minY, cw, ch), GraphicsUnit.Pixel);
     }
     final.Save(saida, ImageFormat.Png);
-    string info = String.Format("fundo=({0:0},{1:0},{2:0}) recorte={3}x{4} final={5}x{6}", fr, fg, fb, cw, ch, fw, fh);
+    string info = String.Format("fundo=({0:0},{1:0},{2:0}) recorte={3}x{4} em ({7},{8}) final={5}x{6} escala={9:0.0000}", fr, fg, fb, cw, ch, fw, fh, minX, minY, fw / (double)cw);
     final.Dispose(); bmp.Dispose(); orig.Dispose();
     return info;
   }
 }
 '@
 
-[RecorteCapa]::Processar((Resolve-Path $Entrada).Path, $saida, 30, 720)
+[RecorteCapa]::Processar((Resolve-Path $Entrada).Path, $saida, 30, $Largura)
 "salvo em $saida ($([math]::Round((Get-Item $saida).Length / 1KB)) KB)"

@@ -1,6 +1,6 @@
 // Guarda os arquivos do jogo para funcionar offline.
 // Ao mudar qualquer arquivo do jogo, aumente a VERSAO para os aparelhos baixarem a nova.
-const VERSAO = 'davizeira-v5';
+const VERSAO = 'davizeira-v6';
 
 const SPRITES = [
   'icone_2', 'icone_3', 'icone_4', 'icone_5', 'icone_6', 'icone_7',
@@ -20,7 +20,7 @@ const ARQUIVOS = [
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',
   './icons/apple-touch-icon.png',
-  './assets/davi.png',
+  './assets/davi-impinando.png',
   ...SPRITES,
 ];
 
