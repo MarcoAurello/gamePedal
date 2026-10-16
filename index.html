@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#3f9be6">
+  <meta name="description" content="Pedale pela quebrada com o Davizeira: pule obstáculos, pegue moedas e impine a bike!">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Davizeira no Pedal</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="tela"></canvas>
+
+  <!-- HUD -->
+  <div class="hud" id="hud" hidden>
+    <div class="hud-esq">
+      <div class="vidas" id="vidas"></div>
+      <div class="moedas"><img src="assets/sprites/icone_7.png" alt=""> <span id="moedas">0</span></div>
+    </div>
+    <div class="hud-centro">
+      <div class="pontos" id="pontos">0</div>
+      <div class="combo" id="combo"></div>
+    </div>
+    <div class="hud-dir">
+      <button class="hud-btn" id="btn-som" aria-label="Som">🔊</button>
+      <button class="hud-btn" id="btn-pausa" aria-label="Pausar">⏸</button>
+    </div>
+  </div>
+
+  <!-- Controles de toque -->
+  <div class="controles" id="controles" hidden>
+    <button class="ctrl ctrl-impinar" id="btn-impinar">IMPINAR</button>
+    <button class="ctrl ctrl-especial" id="btn-especial" hidden>
+      <span>★ ESPECIAL</span>
+      <i class="vida-especial"><b id="barra-especial"></b></i>
+    </button>
+    <button class="ctrl ctrl-pular" id="btn-pular">PULAR</button>
+  </div>
+
+  <!-- Tela inicial -->
+  <section class="painel ativo" id="tela-inicio">
+    <div class="caixa">
+      <img class="cabeca" src="assets/sprites/icone_2.png" alt="Davi">
+      <h1 class="titulo">
+        <span class="t1">DAVIZEIRA</span>
+        <span class="t2">NO PEDAL</span>
+      </h1>
+      <button class="btn-jogar" id="btn-jogar">▶ JOGAR</button>
+      <p class="recorde">RECORDE: <span id="recorde-inicio">0</span></p>
+      <div class="dicas">
+        <p><b>PULAR:</b> toque no botão, ESPAÇO ou ↑</p>
+        <p><b>IMPINAR:</b> segure o botão, SHIFT ou →</p>
+        <p>Pule os obstáculos, pegue moedas e impine para ganhar pontos em dobro!</p>
+      </div>
+      <p class="girar">📱↻ Gire o celular para jogar melhor</p>
+      <a class="link-privacidade" href="privacidade.html">Política de privacidade</a>
+    </div>
+  </section>
+
+  <!-- Pausa -->
+  <section class="painel" id="tela-pausa">
+    <div class="caixa">
+      <h2 class="subtitulo">PAUSADO</h2>
+      <button class="btn-jogar" id="btn-continuar">▶ CONTINUAR</button>
+      <button class="btn-sec" id="btn-sair">MENU</button>
+    </div>
+  </section>
+
+  <!-- Fim de jogo -->
+  <section class="painel" id="tela-fim">
+    <div class="caixa">
+      <img class="queda" src="assets/sprites/icone_4.png" alt="">
+      <h2 class="subtitulo">SE LASCOU!</h2>
+      <div class="resultado">
+        <p>PONTOS <b id="fim-pontos">0</b></p>
+        <p>MOEDAS <b id="fim-moedas">0</b></p>
+        <p>RECORDE <b id="fim-recorde">0</b></p>
+      </div>
+      <p class="novo-recorde" id="novo-recorde" hidden>🏆 NOVO RECORDE!</p>
+      <button class="btn-jogar" id="btn-denovo">↻ JOGAR DE NOVO</button>
+      <button class="btn-sec" id="btn-menu">MENU</button>
+    </div>
+  </section>
+
+  <footer class="credito">Developed by <b>Marco Nunes</b></footer>
+
+  <script src="game.js"></script>
+  <script>
+    // Instala o service worker (funcionar offline / virar app)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
+    }
+  </script>
+</body>
+</html>
