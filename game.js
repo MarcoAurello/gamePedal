@@ -48,6 +48,7 @@ const AJUSTE = {
 // ---------------------------------------------------------------------
 const NOMES = [
   ...[0, 1, 2, 3, 4, 5].map((i) => 'pedal_' + i),
+  ...[0, 1, 2, 3, 4, 5].map((i) => 'abaixado_' + i),
   ...[0, 1, 2, 3].map((i) => 'sobe_' + i),
   ...[0, 1, 2].map((i) => 'roda_' + i),
   ...[0, 1, 2, 3, 4].map((i) => 'pulo_' + i),
@@ -533,9 +534,8 @@ let jogo;
 let recorde = 0;
 try { recorde = Number(localStorage.getItem('davizeira-recorde')) || 0; } catch (e) {}
 
-const entrada = { pular: false, impinar: false, acelerar: false, pulouAgora: false };
+const entrada = { pular: false, impinar: false, abaixar: false, pulouAgora: false };
 
-const TURBO = { extra: 0.6, resposta: 2.5 };   // acelerar: até +60% de velocidade
 
 function novoJogo() {
   jogo = {
@@ -594,15 +594,22 @@ function criarObjetos() {
     obstaculo(x, 0.5);
     obstaculo(x + IMG.icone_5.width * 0.5 + 70 + Math.random() * 30, 0.5);
     texto('SEGURA O PULO!', '#ff8a1f');
-  } else if (r < 0.79) {
+  } else if (r < 0.74) {
     // fileira de baratas: dá para pisar em várias seguidas (combo)
     const n = 1 + Math.floor(Math.random() * 3);
     for (let i = 0; i < n; i++) inimigo('barata', x + i * 90);
-  } else if (r < 0.9) {
+  } else if (r < 0.8) {
     inimigo('rato', x);
-  } else {
-    inimigo('pombo', x);
+  } else if (r < 0.85) {
+    inimigo('pombo', x);                         // pombo alto: passa por baixo ou pisa nele
     if (Math.random() < 0.5) inimigo('pombo', x + 160);
+  } else if (r < 0.93) {
+    varal(x);                                    // na altura do rosto: abaixa!
+    dicaAbaixar();
+  } else {
+    inimigo('pombo', x, { rasante: true });      // vem reto na altura do rosto: abaixa!
+    if (Math.random() < 0.4) inimigo('pombo', x + 120, { rasante: true });
+    dicaAbaixar();
   }
 
   if (jogo.vidas < 3 && Math.random() < 0.06) {
@@ -714,11 +721,29 @@ function montarInimigos() {
   }
 }
 
-function inimigo(especie, x) {
+// opcoes.rasante: pombo que vem reto na altura do rosto (precisa abaixar)
+function inimigo(especie, x, opcoes = {}) {
   const img = QUADROS_INIMIGO[especie][0];
   const dados = INIMIGO[especie];
-  const base = dados.voa ? 95 + Math.random() * 40 : 0;
-  jogo.objetos.push({ tipo: 'inimigo', especie, x, y: base, base, w: img.width, h: img.height, anim: Math.random(), morto: 0 });
+  const rasante = !!opcoes.rasante;
+  const base = !dados.voa ? 0 : rasante ? ALTURA_ROSTO + 2 : 150 + Math.random() * 35;
+  jogo.objetos.push({ tipo: 'inimigo', especie, rasante, x, y: base, base, w: img.width, h: img.height, anim: Math.random(), morto: 0 });
+}
+
+// Varal de roupas atravessado na rua: as roupas descem até a altura do rosto
+function varal(x) {
+  const cores = ['#e53935', '#1e88e5', '#fdd835', '#43a047', '#ffffff', '#8e24aa', '#fb8c00'];
+  const roupas = [];
+  for (let rx = 10; rx < 180; rx += 34 + Math.floor(Math.random() * 10)) {
+    roupas.push({ dx: rx, tipo: Math.floor(Math.random() * 3), cor: cores[Math.floor(Math.random() * cores.length)] });
+  }
+  jogo.objetos.push({ tipo: 'varal', x, w: 200, y: ALTURA_ROSTO, h: 150, roupas });
+}
+
+function dicaAbaixar() {
+  if (jogo.dicaAbaixar) return;
+  jogo.dicaAbaixar = true;
+  texto('▼ ABAIXA!', '#ffb02e');
 }
 
 // Os inimigos andam na direção do Davi (além da rua passando)
@@ -731,9 +756,9 @@ function atualizarInimigos(dt) {
       continue;
     }
     o.anim += dt;
-    o.x -= INIMIGO[o.especie].vel * dt;
+    o.x -= (o.rasante ? 170 : INIMIGO[o.especie].vel) * dt;
     if (o.especie === 'rato') o.y = Math.abs(Math.sin(o.anim * 5)) * 26;          // vem pulando
-    if (o.especie === 'pombo') o.y = o.base + Math.sin(o.anim * 3) * 18;          // voa ondulando
+    if (o.especie === 'pombo' && !o.rasante) o.y = o.base + Math.sin(o.anim * 3) * 18;   // voa ondulando
   }
 }
 
@@ -826,10 +851,7 @@ function atualizar(dt) {
   }
 
   jogo.velocidade = Math.min(FISICA.velMaxima, jogo.velocidade + FISICA.aceleracao * dt);
-  // Acelerar: segurando, a bike ganha velocidade aos poucos; soltando, volta ao normal
-  const alvoTurbo = entrada.acelerar ? 1 : 0;
-  jogo.turbo = (jogo.turbo || 0) + Math.sign(alvoTurbo - (jogo.turbo || 0)) * Math.min(Math.abs(alvoTurbo - (jogo.turbo || 0)), TURBO.resposta * dt);
-  const velocidade = jogo.velocidade * (1 + TURBO.extra * jogo.turbo);
+  const velocidade = jogo.velocidade;
   const passo = velocidade * dt;
   jogo.distancia += passo;
   j.anim += dt * (velocidade / 330);
@@ -848,9 +870,14 @@ function atualizar(dt) {
 
   atualizarEspecial(dt);
 
+  // Abaixar: segurando ▼ no chão o Davi se curva sobre o guidão (passa por baixo do que vem
+  // na altura do rosto); segurando ▼ no ar, ele desce mais rápido
+  j.abaixado = entrada.abaixar && j.noChao;
+
   j.yAnterior = j.y;
   if (!j.noChao) {
-    const g = entrada.pular && j.vy > 0 && !j.manobraMassa ? FISICA.gravidadeSegurando : FISICA.gravidade;
+    let g = entrada.pular && j.vy > 0 && !j.manobraMassa ? FISICA.gravidadeSegurando : FISICA.gravidade;
+    if (entrada.abaixar && !j.manobraMassa) g *= 1.8;
     j.vy -= g * dt;
     j.y += j.vy * dt;
     if (j.manobraMassa) {
@@ -876,7 +903,7 @@ function atualizar(dt) {
   }
 
   // Impinar: segurar levanta a roda e gasta o equilíbrio; soltar baixa devagar e recupera
-  const segurando = j.noChao && entrada.impinar;
+  const segurando = j.noChao && entrada.impinar && !j.abaixado;
   if (segurando) {
     j.empinar = Math.min(1, j.empinar + dt * EQUILIBRIO.subida);
     if (j.empinar >= EQUILIBRIO.naRoda) j.equilibrio -= EQUILIBRIO.gastoSegurando * dt;
@@ -980,6 +1007,17 @@ function caixaJogador() {
   return { x: j.x + 18, y: j.y + 4, w: 70, h: 62 };
 }
 
+// Corpo inteiro, com a cabeça: é o que as ameaças na altura do rosto acertam.
+// Abaixado, a cabeça fica bem mais baixa e passa por baixo delas.
+function caixaCorpo() {
+  const j = jogo.jogador;
+  return { x: j.x + 30, y: j.y + 4, w: 56, h: j.abaixado ? 68 : 104 };
+}
+
+// Altura (acima do chão) de onde começam o varal e o pombo rasante:
+// acima da cabeça do Davi abaixado (72) e abaixo da cabeça em pé (108)
+const ALTURA_ROSTO = 84;
+
 function encosta(a, b) {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }
@@ -998,12 +1036,16 @@ function colisoes() {
     } else if (o.tipo === 'inimigo') {
       if (o.morto > 0) continue;
       const ci = { x: o.x + 4, y: o.y, w: o.w - 8, h: o.h - 4 };
-      if (!encosta(cj, ci)) continue;
+      // quem voa acerta o corpo todo (cabeça incluída); quem anda no chão, a bike
+      if (!encosta(INIMIGO[o.especie].voa ? caixaCorpo() : cj, ci)) continue;
       // caindo e, no quadro anterior, com a roda acima do meio dele = pisou na cabeça
       const pisou = j.vy < 0 && (j.yAnterior ?? j.y) + 4 >= o.y + o.h * 0.5;
       if (j.manobraMassa) esmagar(o, false);
       else if (pisou) esmagar(o, true);
       else if (j.invencivel <= 0) bater(o);
+    } else if (o.tipo === 'varal') {
+      if (o.pego || j.manobraMassa || j.invencivel > 0) continue;
+      if (encosta(caixaCorpo(), { x: o.x + 8, y: o.y, w: o.w - 16, h: o.h })) bater(o);
     } else if (o.tipo === 'rampa') {
       // passou pela rampa no chão: decola alto
       if (j.noChao && cj.x + cj.w > o.x + 20 && cj.x < o.x + o.w - 30 && !o.usada) {
@@ -1090,6 +1132,7 @@ function quadroDoJogador() {
     if (j.manobra && j.vy > -200) return 'pulo_1';
     return j.vy > 0 ? 'pulo_2' : 'pulo_3';
   }
+  if (j.abaixado) return 'abaixado_' + (Math.floor(j.anim * 10) % 6);
   if (j.pouso > 0) return 'pulo_4';
   if (j.empinar >= 0.95) return 'roda_' + (Math.floor(j.anim * 5) % 3);
   if (j.empinar > 0.05) return 'sobe_' + Math.min(3, Math.floor(j.empinar * 4));
@@ -1111,15 +1154,6 @@ function desenhar() {
 
   desenharCenario(jogo.distancia);
 
-  // linhas de velocidade ao acelerar
-  if ((jogo.turbo || 0) > 0.2) {
-    ctx.fillStyle = `rgba(255,255,255,${0.35 * jogo.turbo})`;
-    for (let i = 0; i < 9; i++) {
-      const ly = 120 + ((i * 97) % 320);
-      const lx = LARGURA - ((jogo.distancia * 1.6 + i * 233) % (LARGURA + 200));
-      ctx.fillRect(Math.round(lx), ly, 90 + (i % 3) * 40, 3);
-    }
-  }
 
   // objetos
   for (const o of jogo.objetos) {
@@ -1129,6 +1163,8 @@ function desenhar() {
       desenharRampa(o);
     } else if (o.tipo === 'inimigo') {
       desenharInimigo(o);
+    } else if (o.tipo === 'varal') {
+      desenharVaral(o);
     } else if (o.tipo === 'moeda') {
       const giro = Math.abs(Math.cos(jogo.distancia / 40 + o.x / 60));
       const mw = Math.max(4, o.w * giro);
@@ -1229,6 +1265,43 @@ function desenharEquilibrio(j) {
   ctx.fillText(perigo ? 'SOLTA!' : 'EQUILÍBRIO', x + w / 2, y - 8);
 }
 
+function desenharVaral(o) {
+  const x = Math.round(o.x);
+  const topo = CHAO - o.y - o.h + 20;            // altura da corda
+  // corda presa nas casas, fora da tela, com barriga no meio
+  ctx.strokeStyle = '#3b3b3b';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x - 60, topo - 18);
+  ctx.quadraticCurveTo(x + o.w / 2, topo + 22, x + o.w + 60, topo - 18);
+  ctx.stroke();
+  const corda = (dx) => {                         // y da corda nesse ponto
+    const t = (dx + 60) / (o.w + 120);
+    return (1 - t) * (1 - t) * (topo - 18) + 2 * (1 - t) * t * (topo + 22) + t * t * (topo - 18);
+  };
+  const baixo = CHAO - o.y;                       // onde as roupas terminam (altura do rosto)
+  for (const r of o.roupas) {
+    const rx = x + r.dx, ry = Math.round(corda(r.dx));
+    const balanco = Math.round(Math.sin(jogo.distancia / 50 + r.dx) * 2);
+    ctx.fillStyle = r.cor;
+    if (r.tipo === 0) {                           // lençol / toalha
+      ctx.fillRect(rx + balanco, ry, 28, baixo - ry);
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.fillRect(rx + balanco, baixo - 8, 28, 4);
+    } else if (r.tipo === 1) {                    // camiseta comprida
+      ctx.fillRect(rx - 6 + balanco, ry, 36, 16);
+      ctx.fillRect(rx + balanco, ry, 24, baixo - ry);
+    } else {                                      // bermuda / vestido
+      ctx.fillRect(rx + balanco, ry, 26, baixo - ry - 14);
+      ctx.fillRect(rx + balanco, baixo - 14, 10, 14);
+      ctx.fillRect(rx + 16 + balanco, baixo - 14, 10, 14);
+    }
+    ctx.fillStyle = '#c8a26a';                    // pregadores
+    ctx.fillRect(rx + 3, ry - 3, 3, 6);
+    ctx.fillRect(rx + 19, ry - 3, 3, 6);
+  }
+}
+
 function desenharRampa(o) {
   const x = Math.round(o.x), b = CHAO + 2;
   ctx.fillStyle = '#6f6a66';
@@ -1256,7 +1329,7 @@ function atualizarHud() {
   const j = jogo.jogador;
   const combo = j.manobraMassa ? '★ MANOBRA MASSA! ★'
     : j.empinar >= EQUILIBRIO.naRoda ? 'IMPINANDO! ×2'
-    : (jogo.turbo || 0) > 0.5 ? 'ACELERANDO!' : '';
+    : j.abaixado ? '▼ ABAIXADO' : '';
 
   // Botão do especial e a vida dele (muda todo quadro)
   const esp = jogo.especial;
@@ -1369,15 +1442,15 @@ window.addEventListener('keydown', (e) => {
     apertarPulo();
   }
   if (['ShiftLeft', 'ShiftRight', 'KeyD'].includes(e.code)) entrada.impinar = true;
-  if (['ArrowRight', 'KeyK'].includes(e.code)) entrada.acelerar = true;
+  if (['ArrowDown', 'KeyS'].includes(e.code)) { e.preventDefault(); entrada.abaixar = true; }
   if (e.code === 'KeyP' || e.code === 'Escape') modo === 'pausado' ? continuar() : pausar();
-  if (e.code === 'KeyE' || e.code === 'ArrowDown') usarEspecial();
+  if (e.code === 'KeyE') usarEspecial();
 });
 
 window.addEventListener('keyup', (e) => {
   if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) entrada.pular = false;
   if (['ShiftLeft', 'ShiftRight', 'KeyD'].includes(e.code)) entrada.impinar = false;
-  if (['ArrowRight', 'KeyK'].includes(e.code)) entrada.acelerar = false;
+  if (['ArrowDown', 'KeyS'].includes(e.code)) entrada.abaixar = false;
 });
 
 function botaoSegurar(el, aoApertar, aoSoltar) {
@@ -1393,7 +1466,7 @@ function botaoSegurar(el, aoApertar, aoSoltar) {
 }
 
 botaoSegurar($('btn-pular'), apertarPulo, () => { entrada.pular = false; });
-botaoSegurar($('btn-acelerar'), () => { entrada.acelerar = true; }, () => { entrada.acelerar = false; });
+botaoSegurar($('btn-abaixar'), () => { entrada.abaixar = true; }, () => { entrada.abaixar = false; });
 botaoSegurar($('btn-impinar'), () => { entrada.impinar = true; }, () => { entrada.impinar = false; });
 botaoSegurar($('btn-especial'), usarEspecial, () => {});
 

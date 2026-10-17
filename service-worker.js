@@ -1,10 +1,11 @@
 // Guarda os arquivos do jogo para funcionar offline.
 // Ao mudar qualquer arquivo do jogo, aumente a VERSAO para os aparelhos baixarem a nova.
-const VERSAO = 'davizeira-v7';
+const VERSAO = 'davizeira-v8';
 
 const SPRITES = [
   'icone_2', 'icone_3', 'icone_4', 'icone_5', 'icone_6', 'icone_7',
   'pedal_0', 'pedal_1', 'pedal_2', 'pedal_3', 'pedal_4', 'pedal_5',
+  'abaixado_0', 'abaixado_1', 'abaixado_2', 'abaixado_3', 'abaixado_4', 'abaixado_5',
   'sobe_0', 'sobe_1', 'sobe_2', 'sobe_3',
   'roda_0', 'roda_1', 'roda_2',
   'pulo_0', 'pulo_1', 'pulo_2', 'pulo_3', 'pulo_4',
